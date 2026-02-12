@@ -60,32 +60,32 @@ while true; do
         1)
             echo
             echo "Checking for updates..."
-            python3 "$SCRIPT_DIR/update.py" --check-only
+            python3 "$SCRIPT_DIR/bedrock_server_manager.py" --check-only
             ;;
         2)
             echo
             echo "Updating server (Release)..."
-            python3 "$SCRIPT_DIR/update.py"
+            python3 "$SCRIPT_DIR/bedrock_server_manager.py"
             ;;
         3)
             echo
             echo "Updating server (Preview)..."
-            python3 "$SCRIPT_DIR/update.py" --preview
+            python3 "$SCRIPT_DIR/bedrock_server_manager.py" --preview
             ;;
         4)
             echo
             echo "Force update..."
-            python3 "$SCRIPT_DIR/update.py" --force
+            python3 "$SCRIPT_DIR/bedrock_server_manager.py" --force
             ;;
         5)
             echo
             echo "Installing server from scratch (Release)..."
-            python3 "$SCRIPT_DIR/update.py" --install
+            python3 "$SCRIPT_DIR/bedrock_server_manager.py" --install
             ;;
         6)
             echo
             echo "Installing server from scratch (Preview)..."
-            python3 "$SCRIPT_DIR/update.py" --install --preview
+            python3 "$SCRIPT_DIR/bedrock_server_manager.py" --install --preview
             ;;
         7)
             echo "Exit..."

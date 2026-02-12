@@ -59,37 +59,37 @@ goto MENU
 :OPTION1
 echo.
 echo Checking for updates...
-python "%SCRIPT_DIR%update.py" --check-only
+python "%SCRIPT_DIR%bedrock_server_manager.py" --check-only
 goto MENU
 
 :OPTION2
 echo.
 echo Updating server (Release)...
-python "%SCRIPT_DIR%update.py"
+python "%SCRIPT_DIR%bedrock_server_manager.py"
 goto MENU
 
 :OPTION3
 echo.
 echo Updating server (Preview)...
-python "%SCRIPT_DIR%update.py" --preview
+python "%SCRIPT_DIR%bedrock_server_manager.py" --preview
 goto MENU
 
 :OPTION4
 echo.
 echo Force update...
-python "%SCRIPT_DIR%update.py" --force
+python "%SCRIPT_DIR%bedrock_server_manager.py" --force
 goto MENU
 
 :OPTION5
 echo.
 echo Installing server from scratch (Release)...
-python "%SCRIPT_DIR%update.py" --install
+python "%SCRIPT_DIR%bedrock_server_manager.py" --install
 goto MENU
 
 :OPTION6
 echo.
 echo Installing server from scratch (Preview)...
-python "%SCRIPT_DIR%update.py" --install --preview
+python "%SCRIPT_DIR%bedrock_server_manager.py" --install --preview
 goto MENU
 
 :OPTION7

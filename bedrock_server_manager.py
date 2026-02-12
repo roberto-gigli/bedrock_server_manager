@@ -44,7 +44,7 @@ class BedrockServerUpdater:
     """Class to manage Minecraft Bedrock server updates"""
 
     def __init__(self, current_dir: str = "."):
-        # Directory where update.py is located
+        # Directory where bedrock_server_manager.py is located
         self.script_dir = Path(__file__).parent.resolve()
         # Directory where server files are located (target for install/update)
         self.current_dir = Path(current_dir).resolve()
