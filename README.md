@@ -32,6 +32,8 @@ Opzioni:
 & ([ScriptBlock]::Create((irm https://raw.githubusercontent.com/roberto-gigli/bedrock_server_manager/main/install.ps1))) -InstallDir "C:\Tools\bedrock_server_manager"
 ```
 
+Nota: per default la repo viene scaricata nella cartella corrente. Se la cartella esiste, deve essere vuota oppure un repo git.
+
 **Linux/macOS (bash):**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/roberto-gigli/bedrock_server_manager/main/install.sh | bash
@@ -41,6 +43,8 @@ Opzioni:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/roberto-gigli/bedrock_server_manager/main/install.sh | bash -s -- --dir "$HOME/tools/bedrock_server_manager"
 ```
+
+Nota: per default la repo viene scaricata nella cartella corrente. Se la cartella esiste, deve essere vuota oppure un repo git.
 
 ## Utilizzo
 

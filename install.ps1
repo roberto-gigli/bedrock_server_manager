@@ -1,8 +1,22 @@
 param(
-    [string]$InstallDir = "$env:USERPROFILE\bedrock_server_manager"
+    [string]$InstallDir = (Get-Location).Path
 )
 
 $ErrorActionPreference = "Stop"
+
+function Test-IsEmptyDir {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $true
+    }
+
+    $items = Get-ChildItem -LiteralPath $Path -Force
+    return $items.Count -eq 0
+}
 
 function Ensure-Repo {
     if (Test-Path -LiteralPath $InstallDir) {
@@ -13,9 +27,11 @@ function Ensure-Repo {
             Pop-Location
             return
         }
-        Write-Host "Directory exists but is not a git repo: $InstallDir"
-        Write-Host "Remove it or choose a different -InstallDir."
-        exit 1
+        if (-not (Test-IsEmptyDir -Path $InstallDir)) {
+            Write-Host "Directory exists but is not a git repo: $InstallDir"
+            Write-Host "Remove its contents or choose a different -InstallDir."
+            exit 1
+        }
     }
 
     if (Get-Command git -ErrorAction SilentlyContinue) {
@@ -30,7 +46,13 @@ function Ensure-Repo {
     Invoke-WebRequest -Uri $zipUrl -OutFile $tmpZip
     Expand-Archive -LiteralPath $tmpZip -DestinationPath $env:TEMP -Force
     $extracted = Join-Path $env:TEMP "bedrock_server_manager-main"
-    Move-Item -LiteralPath $extracted -Destination $InstallDir
+    if (Test-Path -LiteralPath $InstallDir) {
+        Get-ChildItem -LiteralPath $extracted -Force | Move-Item -Destination $InstallDir
+        Remove-Item -LiteralPath $extracted -Force -Recurse
+    }
+    else {
+        Move-Item -LiteralPath $extracted -Destination $InstallDir
+    }
     Remove-Item -LiteralPath $tmpZip -Force
 }
 

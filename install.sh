@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-INSTALL_DIR="${HOME}/bedrock_server_manager"
+INSTALL_DIR="$(pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -18,15 +18,21 @@ while [[ $# -gt 0 ]]; do
 done
 
 ensure_repo() {
+  is_empty_dir() {
+    [[ -d "$1" ]] && [[ -z "$(ls -A "$1")" ]]
+  }
+
   if [[ -d "$INSTALL_DIR" ]]; then
     if [[ -d "$INSTALL_DIR/.git" ]]; then
       echo "Updating existing repo in $INSTALL_DIR..."
       git -C "$INSTALL_DIR" pull --ff-only
       return
     fi
-    echo "Directory exists but is not a git repo: $INSTALL_DIR"
-    echo "Remove it or choose a different --dir."
-    exit 1
+    if ! is_empty_dir "$INSTALL_DIR"; then
+      echo "Directory exists but is not a git repo: $INSTALL_DIR"
+      echo "Remove its contents or choose a different --dir."
+      exit 1
+    fi
   fi
 
   if command -v git >/dev/null 2>&1; then
@@ -50,7 +56,14 @@ ensure_repo() {
 
   TMP_DIR="$(mktemp -d -t bedrock_server_manager.XXXXXX)"
   unzip -q "$TMP_ZIP" -d "$TMP_DIR"
-  mv "$TMP_DIR/bedrock_server_manager-main" "$INSTALL_DIR"
+  if [[ -d "$INSTALL_DIR" ]]; then
+    shopt -s dotglob
+    mv "$TMP_DIR/bedrock_server_manager-main/"* "$INSTALL_DIR/"
+    shopt -u dotglob
+    rmdir "$TMP_DIR/bedrock_server_manager-main"
+  else
+    mv "$TMP_DIR/bedrock_server_manager-main" "$INSTALL_DIR"
+  fi
   rm -f "$TMP_ZIP"
   rmdir "$TMP_DIR"
 }
