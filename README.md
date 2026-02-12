@@ -20,6 +20,28 @@ Uno script Python per aggiornare automaticamente il server Minecraft Bedrock Edi
    pip install requests
    ```
 
+### Install script (aggiunge al PATH)
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/roberto-gigli/bedrock_server_manager/main/install.ps1 | iex
+```
+
+Opzioni:
+```powershell
+& ([ScriptBlock]::Create((irm https://raw.githubusercontent.com/roberto-gigli/bedrock_server_manager/main/install.ps1))) -InstallDir "C:\Tools\bedrock_server_manager"
+```
+
+**Linux/macOS (bash):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/roberto-gigli/bedrock_server_manager/main/install.sh | bash
+```
+
+Opzioni:
+```bash
+curl -fsSL https://raw.githubusercontent.com/roberto-gigli/bedrock_server_manager/main/install.sh | bash -s -- --dir "$HOME/tools/bedrock_server_manager"
+```
+
 ## Utilizzo
 
 ### Aggiornamento Base
