@@ -18,8 +18,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 ensure_repo() {
+  local use_zip=0
+
   is_empty_dir() {
     [[ -d "$1" ]] && [[ -z "$(ls -A "$1")" ]]
+  }
+
+  looks_like_repo() {
+    [[ -f "$1/bedrock_server_manager.py" ]] && [[ -f "$1/README.md" ]]
   }
 
   if [[ -d "$INSTALL_DIR" ]]; then
@@ -29,13 +35,11 @@ ensure_repo() {
       return
     fi
     if ! is_empty_dir "$INSTALL_DIR"; then
-      echo "Directory exists but is not a git repo: $INSTALL_DIR"
-      echo "Remove its contents or choose a different --dir."
-      exit 1
+      use_zip=1
     fi
   fi
 
-  if command -v git >/dev/null 2>&1; then
+  if [[ $use_zip -eq 0 ]] && command -v git >/dev/null 2>&1; then
     echo "Cloning repo into $INSTALL_DIR..."
     git clone "https://github.com/roberto-gigli/bedrock_server_manager.git" "$INSTALL_DIR"
     return
@@ -92,4 +96,4 @@ add_to_path() {
 ensure_repo
 add_to_path
 
-echo "Done. You can run: python bedrock_server_manager.py"
+echo "Done. You can run: bedrock_server_manager"

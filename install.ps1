@@ -18,7 +18,18 @@ function Test-IsEmptyDir {
     return $items.Count -eq 0
 }
 
+function Test-LooksLikeRepo {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    return (Test-Path -LiteralPath (Join-Path $Path "bedrock_server_manager.py")) -and
+    (Test-Path -LiteralPath (Join-Path $Path "README.md"))
+}
+
 function Ensure-Repo {
+    $useZip = $false
     if (Test-Path -LiteralPath $InstallDir) {
         if (Test-Path -LiteralPath (Join-Path $InstallDir ".git")) {
             Write-Host "Updating existing repo in $InstallDir..."
@@ -28,13 +39,11 @@ function Ensure-Repo {
             return
         }
         if (-not (Test-IsEmptyDir -Path $InstallDir)) {
-            Write-Host "Directory exists but is not a git repo: $InstallDir"
-            Write-Host "Remove its contents or choose a different -InstallDir."
-            exit 1
+            $useZip = $true
         }
     }
 
-    if (Get-Command git -ErrorAction SilentlyContinue) {
+    if (-not $useZip -and (Get-Command git -ErrorAction SilentlyContinue)) {
         Write-Host "Cloning repo into $InstallDir..."
         git clone "https://github.com/roberto-gigli/bedrock_server_manager.git" $InstallDir
         return
@@ -74,4 +83,4 @@ function Add-ToPath {
 
 Ensure-Repo
 Add-ToPath
-Write-Host "Done. You can run: python bedrock_server_manager.py"
+Write-Host "Done. You can run: bedrock_server_manager"
