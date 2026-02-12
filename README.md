@@ -1,4 +1,4 @@
-# Bedrock Server Updater
+# Bedrock Server Manager
 
 Uno script Python per aggiornare automaticamente il server Minecraft Bedrock Edition.
 
