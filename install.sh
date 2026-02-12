@@ -94,7 +94,7 @@ add_to_path() {
 }
 
 make_executable() {
-  local files=("$INSTALL_DIR/bedrock_server_manager.sh" "$INSTALL_DIR/bedrock_server_manager.bat")
+  local files=("$INSTALL_DIR/bedrock_server_manager.sh")
   for file in "${files[@]}"; do
     if [[ -f "$file" ]]; then
       chmod +x "$file"

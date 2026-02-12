@@ -83,8 +83,7 @@ function Add-ToPath {
 
 function Ensure-Executable {
     $targets = @(
-        (Join-Path $InstallDir "bedrock_server_manager.sh"),
-        (Join-Path $InstallDir "bedrock_server_manager.bat")
+        (Join-Path $InstallDir "bedrock_server_manager.sh")
     )
 
     $chmod = Get-Command chmod -ErrorAction SilentlyContinue
