@@ -24,7 +24,7 @@ Uno script Python per aggiornare automaticamente il server Minecraft Bedrock Edi
 
 ### Aggiornamento Base
 ```bash
-python update.py
+python bedrock_server_manager.py
 ```
 
 ### Opzioni Disponibili
@@ -40,22 +40,22 @@ python update.py
 
 **Controllo aggiornamenti:**
 ```bash
-python update.py --check-only
+python bedrock_server_manager.py --check-only
 ```
 
 **Aggiornamento alla versione preview:**
 ```bash
-python update.py --preview
+python bedrock_server_manager.py --preview
 ```
 
 **Aggiornamento forzato:**
 ```bash
-python update.py --force
+python bedrock_server_manager.py --force
 ```
 
 **Aggiornamento di un server in una cartella specifica:**
 ```bash
-python update.py --dir "C:\MinecraftServer"
+python bedrock_server_manager.py --dir "C:\MinecraftServer"
 ```
 
 ## Come Funziona
