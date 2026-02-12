@@ -81,6 +81,33 @@ function Add-ToPath {
     Write-Host "Added $InstallDir to user PATH. Restart your terminal to refresh."
 }
 
+function Ensure-Executable {
+    $targets = @(
+        (Join-Path $InstallDir "bedrock_server_manager.sh"),
+        (Join-Path $InstallDir "bedrock_server_manager.bat")
+    )
+
+    $chmod = Get-Command chmod -ErrorAction SilentlyContinue
+    if ($null -ne $chmod) {
+        foreach ($target in $targets) {
+            if (Test-Path -LiteralPath $target) {
+                chmod +x $target
+            }
+        }
+        return
+    }
+
+    $icacls = Get-Command icacls -ErrorAction SilentlyContinue
+    if ($null -ne $icacls) {
+        foreach ($target in $targets) {
+            if (Test-Path -LiteralPath $target) {
+                icacls $target /grant "$env:USERNAME:(RX)" | Out-Null
+            }
+        }
+    }
+}
+
 Ensure-Repo
+Ensure-Executable
 Add-ToPath
 Write-Host "Done. You can run: bedrock_server_manager"

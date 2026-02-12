@@ -93,7 +93,17 @@ add_to_path() {
   fi
 }
 
+make_executable() {
+  local files=("$INSTALL_DIR/bedrock_server_manager.sh" "$INSTALL_DIR/bedrock_server_manager.bat")
+  for file in "${files[@]}"; do
+    if [[ -f "$file" ]]; then
+      chmod +x "$file"
+    fi
+  done
+}
+
 ensure_repo
+make_executable
 add_to_path
 
 echo "Done. You can run: bedrock_server_manager"
