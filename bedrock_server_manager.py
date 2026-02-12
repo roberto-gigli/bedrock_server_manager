@@ -69,6 +69,26 @@ class BedrockServerUpdater:
         # Load files and folders to exclude from configuration
         self._load_exclude_lists()
 
+        # Download settings
+        self.download_timeout = self._get_optional_timeout(
+            "download", "download_timeout", 60
+        )
+        self.api_timeout = self._get_optional_timeout("download", "api_timeout", 30)
+        self.max_retries = max(
+            1, self.config.getint("download", "max_retries", fallback=3)
+        )
+
+    def _get_optional_timeout(
+        self, section: str, option: str, fallback: int
+    ) -> Optional[int]:
+        value = self.config.get(section, option, fallback=str(fallback)).strip()
+        if not value:
+            return None
+        try:
+            return int(value)
+        except ValueError:
+            return fallback
+
     def _load_config(self) -> configparser.ConfigParser:
         """Load the configuration file"""
         config = configparser.ConfigParser()
@@ -132,17 +152,18 @@ class BedrockServerUpdater:
         """Get download links from Minecraft API"""
         last_error = None
 
-        for api_url in self.api_urls:
-            try:
-                print(f"Attempting connection to: {api_url}")
-                response = requests.get(api_url, timeout=30)
-                response.raise_for_status()
-                print("Connection successful!")
-                return response.json()
-            except requests.RequestException as e:
-                last_error = e
-                print(f"Error with {api_url}: {e}")
-                continue
+        for attempt in range(1, self.max_retries + 1):
+            for api_url in self.api_urls:
+                try:
+                    print(f"Attempting connection to: {api_url} (try {attempt})")
+                    response = requests.get(api_url, timeout=self.api_timeout)
+                    response.raise_for_status()
+                    print("Connection successful!")
+                    return response.json()
+                except requests.RequestException as e:
+                    last_error = e
+                    print(f"Error with {api_url}: {e}")
+                    continue
 
         # Se nessun URL funziona, solleva un'eccezione
         raise Exception(f"Unable to connect to Minecraft API. Last error: {last_error}")
@@ -187,77 +208,91 @@ class BedrockServerUpdater:
         print(f"Downloading server from: {url}")
 
         zip_path = temp_dir / "bedrock-server.zip"
-        download_error = None
-        download_complete = threading.Event()
-        downloaded_bytes = [0]  # Use list to allow modification in nested function
-        total_bytes = [0]
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36",
+            "Upgrade-Insecure-Requests": "1",
+            "DNT": "1",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate",
+        }
 
-        def perform_download():
-            nonlocal download_error
-            try:
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36",
-                    "Upgrade-Insecure-Requests": "1",
-                    "DNT": "1",
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                    "Accept-Language": "en-US,en;q=0.5",
-                    "Accept-Encoding": "gzip, deflate",
-                }
+        download_error: requests.RequestException | Exception | None = None
 
-                with requests.get(url, headers=headers, stream=True) as r:
-                    r.raise_for_status()
-                    total_bytes[0] = int(r.headers.get("content-length", 0))
+        for attempt in range(1, self.max_retries + 1):
+            download_error = None
+            download_complete = threading.Event()
+            downloaded_bytes = [0]
+            total_bytes = [0]
 
-                    with open(zip_path, "wb") as f:
-                        for chunk in r.iter_content(chunk_size=8192):
-                            if chunk:
-                                f.write(chunk)
-                                downloaded_bytes[0] += len(chunk)
-            except requests.RequestException as e:
-                download_error = e
-            except Exception as e:
-                download_error = e
-            finally:
-                download_complete.set()
+            if zip_path.exists():
+                zip_path.unlink()
 
-        # Start download in separate thread
-        download_thread = threading.Thread(target=perform_download, daemon=True)
-        download_thread.start()
+            def perform_download():
+                nonlocal download_error
+                try:
+                    timeout = None
+                    if self.download_timeout is not None:
+                        timeout = (self.download_timeout, self.download_timeout)
 
-        # Show spinner and progress while downloading
-        spinner = itertools.cycle(["|", "/", "-", "\\"])
-        while not download_complete.is_set():
-            spin_char = next(spinner)
+                    with requests.get(
+                        url,
+                        headers=headers,
+                        stream=True,
+                        timeout=timeout,
+                    ) as r:
+                        r.raise_for_status()
+                        total_bytes[0] = int(r.headers.get("content-length", 0))
 
-            if total_bytes[0] > 0:
-                # Show progress bar with percentage and MB
-                percent = (downloaded_bytes[0] / total_bytes[0]) * 100
-                bar_length = 30
-                filled = int(bar_length * downloaded_bytes[0] // total_bytes[0])
-                bar = "█" * filled + "░" * (bar_length - filled)
-                mb_downloaded = downloaded_bytes[0] / (1024 * 1024)
-                mb_total = total_bytes[0] / (1024 * 1024)
+                        with open(zip_path, "wb") as f:
+                            for chunk in r.iter_content(chunk_size=8192):
+                                if chunk:
+                                    f.write(chunk)
+                                    downloaded_bytes[0] += len(chunk)
+                except requests.RequestException as e:
+                    download_error = e
+                except Exception as e:
+                    download_error = e
+                finally:
+                    download_complete.set()
 
-                sys.stdout.write(
-                    f"\r{spin_char} |{bar}| {percent:.1f}% ({mb_downloaded:.1f}/{mb_total:.1f} MB)"
-                )
-            else:
-                # Just show spinner if size unknown
-                mb_downloaded = downloaded_bytes[0] / (1024 * 1024)
-                sys.stdout.write(
-                    f"\r{spin_char} Downloading... ({mb_downloaded:.1f} MB)"
-                )
+            # Start download in separate thread
+            download_thread = threading.Thread(target=perform_download, daemon=True)
+            download_thread.start()
 
-            sys.stdout.flush()
-            time.sleep(0.1)
+            # Show spinner and progress while downloading
+            spinner = itertools.cycle(["|", "/", "-", "\\"])
+            while not download_complete.is_set():
+                spin_char = next(spinner)
 
-        # Check for errors
-        if download_error:
-            raise Exception(f"Error during download: {download_error}")
+                if total_bytes[0] > 0:
+                    percent = (downloaded_bytes[0] / total_bytes[0]) * 100
+                    bar_length = 30
+                    filled = int(bar_length * downloaded_bytes[0] // total_bytes[0])
+                    bar = "█" * filled + "░" * (bar_length - filled)
+                    mb_downloaded = downloaded_bytes[0] / (1024 * 1024)
+                    mb_total = total_bytes[0] / (1024 * 1024)
 
-        print("\n")
-        print(f"Download completed: {zip_path}")
-        return zip_path
+                    sys.stdout.write(
+                        f"\r{spin_char} |{bar}| {percent:.1f}% ({mb_downloaded:.1f}/{mb_total:.1f} MB)"
+                    )
+                else:
+                    mb_downloaded = downloaded_bytes[0] / (1024 * 1024)
+                    sys.stdout.write(
+                        f"\r{spin_char} Downloading... ({mb_downloaded:.1f} MB)"
+                    )
+
+                sys.stdout.flush()
+                time.sleep(0.1)
+
+            if not download_error:
+                print("\n")
+                print(f"Download completed: {zip_path}")
+                return zip_path
+
+            print(f"\nDownload failed (try {attempt}): {download_error}")
+
+        raise Exception(f"Error during download: {download_error}")
 
     def extract_server(self, zip_path: Path, extract_dir: Path) -> None:
         """Extract server zip file"""
