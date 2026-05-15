@@ -42,13 +42,26 @@ show_menu() {
     echo
     echo "Choose an option:"
     echo "1. Check updates"
-    echo "2. Update server (Release)"
-    echo "3. Update server (Preview)"
-    echo "4. Force update"
-    echo "5. Install server from scratch (Release)"
-    echo "6. Install server from scratch (Preview)"
+    echo "2. Update server (Release) [requires sudo]"
+    echo "3. Update server (Preview) [requires sudo]"
+    echo "4. Force update [requires sudo]"
+    echo "5. Install server from scratch (Release) [requires sudo]"
+    echo "6. Install server from scratch (Preview) [requires sudo]"
     echo "7. Exit"
     echo
+}
+
+run_manager() {
+    if [ "$EUID" -ne 0 ]; then
+        if ! command -v sudo &> /dev/null; then
+            echo "ERROR: sudo not found!"
+            echo "Install sudo or run this script as root for install/update operations."
+            return 1
+        fi
+        sudo python3 "$SCRIPT_DIR/bedrock_server_manager.py" "$@"
+    else
+        python3 "$SCRIPT_DIR/bedrock_server_manager.py" "$@"
+    fi
 }
 
 # Main menu
@@ -65,27 +78,27 @@ while true; do
         2)
             echo
             echo "Updating server (Release)..."
-            python3 "$SCRIPT_DIR/bedrock_server_manager.py"
+            run_manager
             ;;
         3)
             echo
             echo "Updating server (Preview)..."
-            python3 "$SCRIPT_DIR/bedrock_server_manager.py" --preview
+            run_manager --preview
             ;;
         4)
             echo
             echo "Force update..."
-            python3 "$SCRIPT_DIR/bedrock_server_manager.py" --force
+            run_manager --force
             ;;
         5)
             echo
             echo "Installing server from scratch (Release)..."
-            python3 "$SCRIPT_DIR/bedrock_server_manager.py" --install
+            run_manager --install
             ;;
         6)
             echo
             echo "Installing server from scratch (Preview)..."
-            python3 "$SCRIPT_DIR/bedrock_server_manager.py" --install --preview
+            run_manager --install --preview
             ;;
         7)
             echo "Exit..."

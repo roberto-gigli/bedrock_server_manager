@@ -48,6 +48,11 @@ Nota: per default la repo viene scaricata nella cartella corrente. Se la cartell
 
 ## Utilizzo
 
+### Privilegi richiesti per update/install
+
+- **Windows (`bedrock_server_manager.bat`)**: le operazioni di aggiornamento/installazione (opzioni 2-6) richiedono l'esecuzione come **Administrator**.
+- **Linux (`bedrock_server_manager.sh`)**: le operazioni di aggiornamento/installazione (opzioni 2-6) richiedono **sudo** (il launcher lo userà automaticamente quando necessario).
+
 ### Aggiornamento Base
 ```bash
 python bedrock_server_manager.py
@@ -160,6 +165,7 @@ Se ottieni errori di connessione, verifica:
 
 ### Permessi di scrittura
 Assicurati di avere i permessi di scrittura nella cartella del server.
+Per `bedrock_server_manager.bat` avvia il terminale come Administrator per update/install; per `bedrock_server_manager.sh` assicurati che `sudo` sia disponibile.
 
 ### File in uso
 Su Windows, assicurati che il server sia completamente chiuso prima di eseguire l'aggiornamento.
