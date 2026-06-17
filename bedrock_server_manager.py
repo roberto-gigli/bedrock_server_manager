@@ -339,6 +339,24 @@ class BedrockServerUpdater:
                 shutil.copytree(item, dest_path)
                 print(f"Copied folder: {item.name}")
 
+    def make_bedrock_server_executable(self) -> None:
+        """Ensure the Linux bedrock_server binary is executable."""
+        if self.system != System.LINUX:
+            return
+
+        bedrock_server_path = self.current_dir / "bedrock_server"
+        if not bedrock_server_path.exists() or not bedrock_server_path.is_file():
+            return
+
+        current_mode = bedrock_server_path.stat().st_mode
+        executable_mode = current_mode | 0o111
+
+        if executable_mode == current_mode:
+            return
+
+        os.chmod(bedrock_server_path, executable_mode)
+        print(f"Set executable permissions on: {bedrock_server_path.name}")
+
     def get_current_version(self) -> Optional[str]:
         """Try to get current server version"""
         # Check if version file exists
@@ -408,6 +426,7 @@ class BedrockServerUpdater:
 
                 # Copy files (no need to exclude files during fresh install)
                 self.copy_files_to_current_dir(extract_path)
+                self.make_bedrock_server_executable()
 
                 # Save version
                 version_file = self.current_dir / "bedrock_server_exe.version"
@@ -487,6 +506,7 @@ class BedrockServerUpdater:
 
                 # Copy new files
                 self.copy_files_to_current_dir(extract_path)
+                self.make_bedrock_server_executable()
 
                 # Save version
                 version_file = self.current_dir / "bedrock_server_exe.version"
